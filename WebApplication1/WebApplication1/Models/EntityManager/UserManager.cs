@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using MyWebApplication.Models.DB;
+﻿using MyWebApplication.Models.DB;
 using MyWebApplication.Models.ViewModel;
+using System;
+using System.Linq;
 
 namespace MyWebApplication.Models.EntityManager
 {
@@ -24,7 +23,7 @@ namespace MyWebApplication.Models.EntityManager
                     ModifiedDateTime = DateTime.Now
                 };
 
-                db.SystemUsers.Add(newSysUser); 
+                db.SystemUsers.Add(newSysUser);
                 db.SaveChanges();
 
                 int newUserId = db.SystemUsers.First(u => u.LoginName == newSysUser.LoginName).UserID;
@@ -45,14 +44,88 @@ namespace MyWebApplication.Models.EntityManager
                 db.SaveChanges();
             }
         }
-        public List<Users> GetAllUsers()
+
+        public void UpdateUserAccount(UserModel user)
         {
             using (MyDBContext db = new MyDBContext())
             {
-                return db.Users.Where(u => u.Gender == "F").ToList();
+                // Check if a user with the given login name already exists
+                SystemUsers existingSysUser = db.SystemUsers.FirstOrDefault(u => u.LoginName == user.LoginName);
+                Users existingUser = db.Users.FirstOrDefault(u => u.UserID == existingSysUser.UserID);
+
+                if (existingSysUser != null && existingUser != null)
+                {
+                    // Update the existing user
+                    existingSysUser.ModifiedBy = 1; // This has to be updated
+                    existingSysUser.ModifiedDateTime = DateTime.Now;
+
+
+                    // You can also update other properties of the user as needed
+                    existingUser.FirstName = user.FirstName;
+                    existingUser.LastName = user.LastName;
+                    existingUser.Gender = user.Gender;
+
+                    db.SaveChanges();
+                }
+                else
+                {
+                    // Add a new user since the user doesn't exist
+                    SystemUsers newSysUser = new SystemUsers
+                    {
+                        LoginName = user.LoginName,
+                        CreatedBy = 1,
+                        PasswordEncryptedText = user.Password, // Update this to handle encryption
+                        CreatedDateTime = DateTime.Now,
+                        ModifiedBy = 1,
+                        ModifiedDateTime = DateTime.Now
+                    };
+
+                    db.SystemUsers.Add(newSysUser);
+                    db.SaveChanges();
+
+                    int newUserId = newSysUser.UserID;
+
+                    Users newUser = new Users
+                    {
+                        UserID = newUserId,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Gender = "1",
+                        CreatedBy = 1,
+                        CreatedDateTime = DateTime.Now,
+                        ModifiedBy = 1,
+                        ModifiedDateTime = DateTime.Now
+                    };
+
+                    db.Users.Add(newUser);
+                    db.SaveChanges();
+                }
             }
 
+        }
 
+        public UsersModel GetAllUsers()
+        {
+            UsersModel list = new UsersModel();
+
+            using (MyDBContext db = new MyDBContext())
+            {
+                var users = from u in db.Users
+                            join us in db.SystemUsers
+                        on u.UserID equals us.UserID
+                            select new { u, us };
+
+                list.Users = users.Select(records => new UserModel()
+                {
+                    LoginName = records.us.LoginName,
+                    FirstName = records.u.FirstName,
+                    LastName = records.u.LastName,
+                    Gender = records.u.Gender,
+                    CreatedBy = records.u.CreatedBy
+                }).ToList();
+            }
+
+            return list;
         }
 
         public bool IsLoginNameExist(string loginName)
@@ -65,3 +138,4 @@ namespace MyWebApplication.Models.EntityManager
 
     }
 }
+
