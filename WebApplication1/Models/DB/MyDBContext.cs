@@ -25,7 +25,7 @@ namespace MyWebApplication.Models.DB
                 // warning To protect potentially sensitive information in your connection string,
                 // you should move it out of source code.See http://go.microsoft.com/fwlink/?LinkId=723263
                 // for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Data Source=AS103470;Initial Catalog=DemoDB;Integrated Security=True;Multiple Active Result Sets=True;TrustServerCertificate=true");
+                optionsBuilder.UseSqlServer("Data Source=(localdb)\\JamesDB;Initial Catalog=JamesDB;Integrated Security=True;Multiple Active Result Sets=True;TrustServerCertificate=true");
             }
         }
 
