@@ -62,6 +62,11 @@ namespace MyWebApplication.Models.EntityManager
 
         public void UpdateUserAccount(UserModel user)
         {
+            UpdateUserAccount(user, user.LoginName);
+        }
+
+        public void UpdateUserAccount(UserModel user, string username)
+        {
             using (MyDBContext db = new MyDBContext())
             {
                 // Check if a user with the given login name already exists
@@ -158,6 +163,48 @@ namespace MyWebApplication.Models.EntityManager
 
             return list;
         }
+
+        public UserModel GetUser(string user)
+        {
+            UserModel userModel = new();
+
+            using (MyDBContext db = new MyDBContext())
+            {
+                var users =
+                    from u in db.Users
+                    join us in db.SystemUsers on u.UserID equals us.UserID
+                    join ur in db.UserRole on u.UserID equals ur.UserID
+                    join r in db.Role on ur.LookUpRoleID equals r.RoleID
+                    where us.LoginName == user
+                    select new
+                    {
+                        u,
+                        us,
+                        r,
+                        ur
+                    };
+
+                userModel = users
+                    .Select(
+                        records =>
+                            new UserModel()
+                            {
+                                LoginName = records.us.LoginName,
+                                FirstName = records.u.FirstName,
+                                LastName = records.u.LastName,
+                                Gender = records.u.Gender,
+                                CreatedBy = records.u.CreatedBy,
+                                AccountImage = records.u.AccountImage ?? string.Empty,
+                                RoleID = records.ur.LookUpRoleID,
+                                RoleName = records.r.RoleName
+                            }
+                    )
+                    .First();
+            }
+
+            return userModel;
+        }
+
 
         public bool IsLoginNameExist(string loginName)
         {
