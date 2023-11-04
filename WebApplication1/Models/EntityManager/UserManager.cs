@@ -85,14 +85,6 @@ namespace MyWebApplication.Models.EntityManager
                     existingUser.LastName = user.LastName;
                     existingUser.Gender = user.Gender;
 
-                    UserRole userRole = db.UserRole.FirstOrDefault(ur => ur.UserID == existingUser.UserID);
-
-                    if (userRole != null)
-                    {
-                        userRole.LookUpRoleID = user.RoleID;
-                        db.UserRole.Update(userRole);
-                    }
-
                     db.SaveChanges();
                 }
                 else
