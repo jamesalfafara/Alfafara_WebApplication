@@ -85,6 +85,14 @@ namespace MyWebApplication.Models.EntityManager
                     existingUser.LastName = user.LastName;
                     existingUser.Gender = user.Gender;
 
+                    UserRole userRole = db.UserRole.FirstOrDefault(ur => ur.UserID == existingUser.UserID);
+
+                    if (userRole != null)
+                    {
+                        userRole.LookUpRoleID = user.RoleID;
+                        db.UserRole.Update(userRole);
+                    }
+
                     db.SaveChanges();
                 }
                 else
@@ -122,6 +130,38 @@ namespace MyWebApplication.Models.EntityManager
                 }
             }
 
+        }
+
+        public void UpdateProfile(UserModel user, string username)
+        {
+            using (MyDBContext db = new MyDBContext())
+            {
+                // Check if a user with the given login name already exists
+                SystemUsers existingSysUser = db.SystemUsers.FirstOrDefault(
+                    u => u.LoginName == username
+                );
+                Users existingUser = db.Users.FirstOrDefault(
+                    u => u.UserID == existingSysUser.UserID
+                );
+
+                if (existingSysUser == null && existingUser == null)
+                {
+                    return;
+                }
+
+                // Update the existing user
+                existingSysUser.ModifiedBy = 1; // This has to be updated
+                existingSysUser.ModifiedDateTime = DateTime.Now;
+                existingSysUser.LoginName = user.LoginName;
+                existingSysUser.PasswordEncryptedText = user.Password;
+
+                // You can also update other properties of the user as needed
+                existingUser.FirstName = user.FirstName;
+                existingUser.LastName = user.LastName;
+                existingUser.Gender = user.Gender;
+
+                db.SaveChanges();
+            }
         }
 
         public UsersModel GetAllUsers()
